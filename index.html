@@ -1,0 +1,479 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Tap to Reveal</title>
+
+
+
+  <style>
+	  @font-face {
+  font-family: 'Natalic';
+  src: url('images/Natalic.ttf') format('truetype');
+}
+
+    html, body {
+
+      margin: 0;
+
+      height: 100%;
+
+      background: #000;
+
+      display: grid;
+
+      place-items: center;
+
+    }
+
+
+
+    .stage {
+
+      width: min(100vw, calc(100vh * 9 / 16));
+
+      height: min(100vh, calc(100vw * 16 / 9));
+
+      position: relative;
+
+      overflow: hidden;
+
+      background: #000;
+
+      touch-action: manipulation;
+
+		visibility: hidden;
+
+    }
+
+
+
+    video, img {
+
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+
+      height: 100%;
+
+      object-fit: cover;
+
+      display: block;
+
+    }
+
+
+
+    /* Tap screen image */
+
+    #tapImage {
+
+      z-index: 2;
+
+      cursor: pointer;
+
+    }
+
+	  #tapTextOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+}
+
+	  #tapTextOverlay p {
+  position: absolute;
+  bottom: 25%;
+  width: 100%;
+  margin: 0;
+
+  font-family: 'Natalic', cursive;
+  font-size: 31px;
+  font-weight: 400;
+ color: #655b53;
+
+  text-shadow:
+    0 1px 2px rgba(255,255,255,0.35);
+}
+
+
+
+
+    /* End screen image */
+
+   #endVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  z-index: 3;
+  display: none;
+}
+	  #endTextOverlay {
+		  
+		  opacity: 0;
+animation: fadeUp 1.2s ease forwards;
+animation-delay: 0.3s;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  pointer-events: none;
+  text-align: center;
+  color: #7ba8c9;
+}
+
+#endTextOverlay h1 {
+	opacity: 0;
+animation: fadeUp 1.2s ease forwards;
+animation-delay: 0.2s;
+  position: absolute;
+  top: 11%;
+  width: 100%;
+  margin: 0;
+  font-size: 58px;
+  font-family: 'Natalic', cursive;
+  font-weight: 400;
+	text-shadow:
+  0 1px 2px rgba(255,255,255,0.18),
+  0 3px 8px rgba(110,150,190,0.12);
+}
+
+#endTextOverlay h2 {
+	opacity: 0;
+animation: fadeUp 1.2s ease forwards;
+animation-delay: 0.8s;
+  position: absolute;
+  top: 23%;
+  width: 100%;
+  margin: 0;
+ font-size: 16px;
+  font-family: Arial, sans-serif;
+  font-weight: 300;
+  letter-spacing: 2px;
+	text-shadow:
+  0 1px 2px rgba(255,255,255,0.12);
+}
+
+#endTextOverlay p {
+  position: absolute;
+  bottom: 34%;
+  width: 100%;
+  margin: 0;
+font-size: 29px;
+text-shadow:
+  0 0 3px rgba(255,255,255,1),
+  0 0 8px rgba(255,255,255,1),
+  0 0 16px rgba(255,255,255,1),
+  0 0 28px rgba(255,255,255,1),
+  0 0 48px rgba(220,235,255,0.95),
+0 0 80px rgba(220,235,255,0.9);
+  font-family: Georgia, serif;
+}
+
+
+#ultrasoundFrame {
+	opacity: 0;
+animation: fadeZoom 1.2s ease forwards;
+animation-delay: 1s;
+  position: absolute;
+
+  top: 30%;
+  left: 50%;
+  width: 58%;
+
+  transform: translateX(-50%);
+  z-index: 4;
+  display: none;
+
+  padding: 8px;
+  background: #d9eaf6;
+  border: 3px solid #9bbfd9;
+  border-radius: 10px;
+  box-shadow: 0 0 18px rgba(255,255,255,0.8);
+}
+
+#ultrasoundImage {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 6px;
+}
+    /* Video layer */
+
+   #revealVideo {
+  z-index: 1;
+  display: none; /* hidden until tap */
+}
+
+	  @keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeZoom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+  </style>
+
+</head>
+
+<body>
+
+
+
+<div class="stage" id="stage">
+
+
+
+  <!-- Video -->
+
+  <video
+
+    id="revealVideo"
+
+    playsinline
+
+    preload="auto"
+
+  >
+
+    <source src="video/gender.mp4" type="video/mp4">
+
+  </video>
+
+
+
+  <!-- Initial tap image -->
+
+  <img
+
+    src="images/tap.png"
+
+    alt="Tap to reveal"
+
+    id="tapImage"
+
+  >
+	<div id="tapTextOverlay">
+  <p id="tapQuestionText"></p>
+</div>
+	
+
+
+
+  <!-- End screen -->
+
+<video
+  id="endVideo"
+  playsinline
+  preload="auto"
+>
+  <source src="video/end.mp4" type="video/mp4">
+</video>
+	
+<div id="endTextOverlay">
+<h1 id="babyNameText"></h1>
+<h2 id="dueDateText"></h2>
+<p id="messageText"></p>
+</div>
+
+	<div id="ultrasoundFrame">
+  <img
+    src="images/ultrasound.png"
+    alt="ultrasound"
+    id="ultrasoundImage"
+  >
+</div>
+	
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+
+  const stage = document.getElementById('stage');
+
+  const tapImage = document.getElementById('tapImage');
+
+  const endVideo = document.getElementById('endVideo');
+	const endTextOverlay = document.getElementById('endTextOverlay');
+
+const ultrasoundFrame = document.getElementById('ultrasoundFrame');
+  const video = document.getElementById('revealVideo');
+const babyNameText = document.getElementById('babyNameText');
+const dueDateText = document.getElementById('dueDateText');
+const messageText = document.getElementById('messageText');
+	const tapQuestionText = document.getElementById('tapQuestionText');
+const ultrasoundImage = document.getElementById('ultrasoundImage');
+
+const SUPABASE_URL = "https://bfzhvulpymbqzwxorzih.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_aLj5jota1g3icfvF7MROIQ_b4-yKlo3";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+
+  async function start() {
+
+    // Show video layer
+
+    video.style.display = 'block';
+
+
+
+    // Reset in case of re-entry
+
+    video.currentTime = 0;
+
+
+
+    try {
+
+      // Attempt playback WITH SOUND
+
+      await video.play();
+
+
+
+      // Hide tap image after successful playback
+
+      tapImage.style.display = 'none';
+		document.getElementById('tapTextOverlay').style.display = 'none';
+
+
+
+    } catch (err) {
+
+      console.log('Playback blocked:', err);
+
+
+
+      // Fallback: show controls so user can press play
+
+      video.setAttribute('controls', 'controls');
+
+    }
+
+  }
+
+
+
+  // When video ends
+video.addEventListener('ended', async () => {
+  video.style.display = 'none';
+
+  endVideo.style.display = 'block';
+
+  try {
+    await endVideo.play();
+  } catch (err) {
+    console.log('End video failed:', err);
+  }
+
+  endTextOverlay.style.display = 'block';
+  ultrasoundFrame.style.display = 'block';
+});
+	
+async function loadReveal() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  if (!id) {
+    stage.style.visibility = 'visible';
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("gender-design1")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    console.error("Reveal not found", error);
+    stage.style.visibility = 'visible';
+    return;
+  }
+
+  babyNameText.textContent = data.baby_name || "";
+  tapQuestionText.textContent = data.baby_name
+    ? `What will ${data.baby_name} be?`
+    : "";
+
+  dueDateText.textContent = data.due_date || "";
+  messageText.textContent = data.message || "";
+
+  if (data.ultrasound_url) {
+    ultrasoundImage.src = data.ultrasound_url;
+  }
+
+  stage.style.visibility = 'visible';
+}
+
+loadReveal();
+  // Start video on first tap
+stage.addEventListener('pointerup', start, { once: true });
+
+</script>
+
+
+
+</body>
+
+</html>
